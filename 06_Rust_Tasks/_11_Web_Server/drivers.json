@@ -1,0 +1,15 @@
+[
+    {
+      "id": "DRV-001",
+      "name": "Max Verstappen",
+      "team": "Red Bull",
+      "points": 575
+    },
+    {
+      "id": "DRV-002",
+      "name": "Lewis Hamilton",
+      "team": "Ferrari",
+      "points": 387
+    }
+  ]
+  
