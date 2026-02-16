@@ -14,12 +14,10 @@ Inventyv_Training/
 ├── 02_HTML_CSS_Task/
 │   ├── index.html
 │   ├── style.css
-|   ├── README.md
+|   
 │
 ├── 03_DBMS_Query_Task/
-│   ├── mysql_movies.sql
-│   ├── mysql_movies_db.md
-│   ├── Questions.txt
+│   ├── SQL_TASK.md
 │
 ├── 04_Js_Task/
 │   ├── Task1.js
@@ -40,7 +38,7 @@ Inventyv_Training/
 |   ├── _8_Inventory_Task
 |   ├── _9_Inventory_with_Lifetime_Closure
 |   ├── _10_Multithreaded_Application
-└── README.md
+|   ├── _11_Web_Server
 ```
 
 ---
@@ -53,7 +51,7 @@ Inventyv_Training/
 
 **Contents:**
 
-- `README.md` - Contains a link to a Figma flowchart board that visualizes various flowcharts.
+- `All_FlowCharts.md` - Contains a link to a Figma flowchart board that visualizes various flowcharts.
 
 ---
 
@@ -187,5 +185,15 @@ A comprehensive project integrating multiple Rust concepts:
 - Real-Time State Monitoring: A dedicated printer thread snapshots the shared memory every 5 seconds, displaying records with human-readable timestamps (HH:MM:SS am/pm).
 - Automated Memory Cleanup: Two independent janitor threads monitor the collection every second, removing records based on ID parity (Even/Odd) once they exceed a 20-second lifespan.
 - Live Data Auditing: Separate counter threads continuously calculate and report the total number of even and odd records currently stored in the shared vector.
+
+### 11. _11_Web_Server
+- A simple HTTP server built using **Axum** and **Tokio** that manages F1 drivers.
+- It demostrates
+- Async Rust
+- Multi-thread Tokio runtime
+- Shared state using `Arc<RwLock<T>>`
+- CRUD APIs
+
+
 
 ---
