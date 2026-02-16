@@ -1,20 +1,20 @@
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicI32, Ordering};
 use std::thread;
-use std::time::{Duration, SystemTime};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use chrono::{DateTime, Local}; 
 
 #[derive(Debug, Clone)]
 struct MultiThread {
     id: i32,
-    record_added_time: SystemTime,
+    // Field name and type updated per requirement
+    recordAddedTime: String, 
     thread_id: String,
 }
 
 fn main() {
-    println!("🚀 Multithreading application started...");
+    println!("Multithreading application started...");
 
-    // Shared data and global counter
     let records = Arc::new(Mutex::new(Vec::<MultiThread>::new()));
     let counter = Arc::new(AtomicI32::new(1));
 
@@ -22,12 +22,17 @@ fn main() {
     let r1 = Arc::clone(&records);
     let c1 = Arc::clone(&counter);
     thread::spawn(move || {
-        println!("✅ Thread 1 started (Creator)");
+        println!("Thread 1 started (Creator)");
         loop {
             let id = c1.fetch_add(1, Ordering::SeqCst);
+            
+            // Create human-readable string immediately
+            let now = Local::now();
+            let timestamp_str = now.format("%I:%M:%S %p").to_string().to_lowercase();
+
             let record = MultiThread {
                 id,
-                record_added_time: SystemTime::now(),
+                recordAddedTime: timestamp_str,
                 thread_id: format!("T-{}", rand::random::<u32>()),
             };
             {
@@ -42,18 +47,16 @@ fn main() {
     // ---------------- THREAD 2 (State Printer) ----------------
     let r2 = Arc::clone(&records);
     thread::spawn(move || {
-        println!("✅ Thread 2 started (Printer)");
+        println!("Thread 2 started (Printer)");
         loop {
             thread::sleep(Duration::from_secs(5));
             {
                 let data = r2.lock().unwrap();
                 println!("\n--- Current State ---");
                 for rec in data.iter() {
-                    let datetime: DateTime<Local> = rec.record_added_time.into();
-                    let human_time = datetime.format("%I:%M:%S %p").to_string().to_lowercase();
-                    
+                    // Printing the String field directly now
                     println!("[ID: {} | Time: {} | UID: {}]", 
-                        rec.id, human_time, rec.thread_id);
+                        rec.id, rec.recordAddedTime, rec.thread_id);
                 }
                 println!("----------------------");
             }
@@ -67,20 +70,30 @@ fn main() {
         loop {
             thread::sleep(Duration::from_secs(1));
             let mut data = r3.lock().unwrap();
-            let now = SystemTime::now();
+            
+            // Note: Since recordAddedTime is now a String, we use the vector length
+            // or logic based on the IDs to simulate the 'age' cleanup safely, 
+            // but for exact '20s' timing with a String, we track current time.
+            let now = Local::now();
 
             data.retain(|rec| {
                 let is_even = rec.id % 2 == 0;
-                let age = now.duration_since(rec.record_added_time)
-                    .unwrap_or(Duration::from_secs(0))
-                    .as_secs();
+                
+                // Converting string back to time for the age check
+                let rec_time = DateTime::parse_from_str(
+                    &format!("{} {}", now.format("%Y-%m-%d"), rec.recordAddedTime), 
+                    "%Y-%m-%d %I:%M:%S %p"
+                ).ok();
 
-                if is_even && age > 20 {
-                    println!("🧹 [T3] Removing Even ID: {}", rec.id);
+                let should_remove = if let Some(t) = rec_time {
+                    let age = now.signed_duration_since(t).num_seconds();
+                    is_even && age > 20
+                } else { false };
+
+                if should_remove {
+                    println!("[T3] Removing Even ID: {}", rec.id);
                     false 
-                } else {
-                    true 
-                }
+                } else { true }
             });
         }
     });
@@ -92,20 +105,24 @@ fn main() {
         loop {
             thread::sleep(Duration::from_secs(1));
             let mut data = r4.lock().unwrap();
-            let now = SystemTime::now();
+            let now = Local::now();
 
             data.retain(|rec| {
                 let is_odd = rec.id % 2 != 0;
-                let age = now.duration_since(rec.record_added_time)
-                    .unwrap_or(Duration::from_secs(0))
-                    .as_secs();
+                let rec_time = DateTime::parse_from_str(
+                    &format!("{} {}", now.format("%Y-%m-%d"), rec.recordAddedTime), 
+                    "%Y-%m-%d %I:%M:%S %p"
+                ).ok();
 
-                if is_odd && age > 20 {
+                let should_remove = if let Some(t) = rec_time {
+                    let age = now.signed_duration_since(t).num_seconds();
+                    is_odd && age > 20
+                } else { false };
+
+                if should_remove {
                     println!("[T4] Removing Odd ID: {}", rec.id);
                     false 
-                } else {
-                    true 
-                }
+                } else { true }
             });
         }
     });
@@ -134,8 +151,5 @@ fn main() {
         }
     });
 
-    // Main thread wait loop
-    loop { 
-        thread::sleep(Duration::from_secs(60)); 
-    }
+    loop { thread::sleep(Duration::from_secs(60)); }
 }
